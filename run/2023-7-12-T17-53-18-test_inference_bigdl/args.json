@@ -1,0 +1,9 @@
+{
+    "run_tag": "test_inference_bigdl",
+    "project_root": ".",
+    "model_path": "pretrained/chatglm2-6b",
+    "val_data_path": "data/val.json",
+    "output_path": "output.json",
+    "stats_path": "stats.json",
+    "args_save_path": "args.json"
+}

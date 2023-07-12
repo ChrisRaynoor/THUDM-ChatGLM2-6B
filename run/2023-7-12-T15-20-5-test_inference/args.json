@@ -1,0 +1,12 @@
+{
+    "project_root": ".",
+    "run_tag": "test_inference",
+    "model_path_fp16": "pretrained/chatglm2-6b",
+    "model_path_int4": "pretrained/chatglm2-6b-int4",
+    "origin_model_type": "fp16",
+    "model_type": "int4",
+    "data_path": "data/train_valid.json",
+    "output_path": "output.json",
+    "stats_path": "stats.json",
+    "args_save_path": "args.json"
+}

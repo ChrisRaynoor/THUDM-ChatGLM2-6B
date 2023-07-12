@@ -2,6 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "test_inference",
             "type": "python",
             "request": "launch",
@@ -9,7 +17,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model_type", "int4"
+                // "--model_type", "int4"
             ]
         }
     ]
