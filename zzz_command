@@ -1,0 +1,1 @@
+python test_inferenc_chatglmcpp.py --run_tag chatglm2-cpp-80tokens --max_length 80

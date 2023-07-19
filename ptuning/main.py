@@ -25,7 +25,7 @@ import json
 
 import numpy as np
 from datasets import load_dataset
-import jieba 
+import jieba
 from rouge_chinese import Rouge
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import torch
@@ -45,6 +45,7 @@ from trainer_seq2seq import Seq2SeqTrainer
 from arguments import ModelArguments, DataTrainingArguments
 
 logger = logging.getLogger(__name__)
+
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
@@ -151,7 +152,7 @@ def main():
     prompt_column = data_args.prompt_column
     response_column = data_args.response_column
     history_column = data_args.history_column
-    
+
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
 
@@ -192,15 +193,17 @@ def main():
                 prompt = tokenizer.build_prompt(query, history)
 
                 prompt = prefix + prompt
-                a_ids = tokenizer.encode(text=prompt, add_special_tokens=True, truncation=True,
-                                         max_length=data_args.max_source_length)
-                b_ids = tokenizer.encode(text=answer, add_special_tokens=False, truncation=True,
-                                         max_length=data_args.max_target_length)
+                a_ids = tokenizer.encode(
+                    text=prompt, add_special_tokens=True, truncation=True, max_length=data_args.max_source_length
+                )
+                b_ids = tokenizer.encode(
+                    text=answer, add_special_tokens=False, truncation=True, max_length=data_args.max_target_length
+                )
 
                 context_length = len(a_ids)
                 input_ids = a_ids + b_ids + [tokenizer.eos_token_id]
                 labels = [tokenizer.pad_token_id] * context_length + b_ids + [tokenizer.eos_token_id]
-                
+
                 pad_len = max_seq_length - len(input_ids)
                 input_ids = input_ids + [tokenizer.pad_token_id] * pad_len
                 labels = labels + [tokenizer.pad_token_id] * pad_len
@@ -211,7 +214,7 @@ def main():
                 model_inputs["labels"].append(labels)
 
         return model_inputs
-    
+
     def print_dataset_example(example):
         print("input_ids", example["input_ids"])
         print("inputs", tokenizer.decode(example["input_ids"]))
@@ -277,11 +280,7 @@ def main():
     # Data collator
     label_pad_token_id = -100 if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id
     data_collator = DataCollatorForSeq2Seq(
-        tokenizer,
-        model=model,
-        label_pad_token_id=label_pad_token_id,
-        pad_to_multiple_of=None,
-        padding=False
+        tokenizer, model=model, label_pad_token_id=label_pad_token_id, pad_to_multiple_of=None, padding=False
     )
 
     # Metric
@@ -295,19 +294,14 @@ def main():
             labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
         decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-        score_dict = {
-            "rouge-1": [],
-            "rouge-2": [],
-            "rouge-l": [],
-            "bleu-4": []
-        }
+        score_dict = {"rouge-1": [], "rouge-2": [], "rouge-l": [], "bleu-4": []}
         for pred, label in zip(decoded_preds, decoded_labels):
             hypothesis = list(jieba.cut(pred))
             reference = list(jieba.cut(label))
             rouge = Rouge()
-            scores = rouge.get_scores(' '.join(hypothesis) , ' '.join(reference))
+            scores = rouge.get_scores(" ".join(hypothesis), " ".join(reference))
             result = scores[0]
-            
+
             for k, v in result.items():
                 score_dict[k].append(round(v["f"] * 100, 4))
             bleu_score = sentence_bleu([list(label)], list(pred), smoothing_function=SmoothingFunction().method3)
@@ -335,7 +329,7 @@ def main():
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=compute_metrics if training_args.predict_with_generate else None,
-        save_changed=model_args.pre_seq_len is not None
+        save_prefixencoder=model_args.pre_seq_len is not None,
     )
 
     # Training
@@ -365,7 +359,9 @@ def main():
     max_seq_length = data_args.max_source_length + data_args.max_target_length + 1
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
-        metrics = trainer.evaluate(metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length, temperature=0.95)
+        metrics = trainer.evaluate(
+            metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length, temperature=0.95
+        )
         max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
         metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
 
@@ -374,7 +370,14 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict", max_length=max_seq_length, do_sample=True, top_p=0.7, temperature=0.95)
+        predict_results = trainer.predict(
+            predict_dataset,
+            metric_key_prefix="predict",
+            max_length=max_seq_length,
+            do_sample=True,
+            top_p=0.7,
+            temperature=0.95,
+        )
         metrics = predict_results.metrics
         max_predict_samples = (
             data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)

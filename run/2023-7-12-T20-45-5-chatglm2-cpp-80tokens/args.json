@@ -1,0 +1,15 @@
+{
+    "project_root": ".",
+    "run_tag": "chatglm2-cpp-80tokens",
+    "model": "pretrained/chatglm2-ggml/chatglm2-q4_0-ggml.bin",
+    "max_length": 80,
+    "max_context_length": 512,
+    "top_k": 0,
+    "top_p": 0.7,
+    "temp": 0.95,
+    "threads": 2,
+    "data_path": "data/train_valid.json",
+    "output_path": "output.json",
+    "stats_path": "stats.json",
+    "args_save_path": "args.json"
+}
